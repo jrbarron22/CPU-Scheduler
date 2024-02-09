@@ -1,0 +1,1 @@
+/opt/software/software/GCCcore/9.3.0/bin/c++  -std=c++11 -Wall -Wextra -Wshadow -Werror  -rdynamic CMakeFiles/dyn_array_test.dir/test/tests.cpp.o CMakeFiles/dyn_array_test.dir/src/dyn_array.c.o  -o dyn_array_test  -lgtest -lpthread 

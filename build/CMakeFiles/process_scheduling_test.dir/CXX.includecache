@@ -1,0 +1,30 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/homes/jrbarron/hw2/include/processing_scheduling.h
+stdbool.h
+-
+stdint.h
+-
+dyn_array.h
+/homes/jrbarron/hw2/include/dyn_array.h
+
+/homes/jrbarron/hw2/test/tests.cpp
+fcntl.h
+-
+stdio.h
+-
+gtest/gtest.h
+/homes/jrbarron/hw2/test/gtest/gtest.h
+pthread.h
+-
+../include/processing_scheduling.h
+/homes/jrbarron/hw2/include/processing_scheduling.h
+dyn_array.h
+-
+

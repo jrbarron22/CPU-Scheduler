@@ -1,0 +1,5 @@
+/homes/jrbarron/hw2/build/CMakeFiles/rebuild_cache.dir
+/homes/jrbarron/hw2/build/CMakeFiles/hw2_test.dir
+/homes/jrbarron/hw2/build/CMakeFiles/dyn_array.dir
+/homes/jrbarron/hw2/build/CMakeFiles/edit_cache.dir
+/homes/jrbarron/hw2/build/CMakeFiles/analysis_test.dir

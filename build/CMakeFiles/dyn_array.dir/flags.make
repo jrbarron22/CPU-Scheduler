@@ -6,5 +6,5 @@ C_FLAGS = -std=c11 -Wall -Wextra -Wshadow -Werror
 
 C_DEFINES = 
 
-C_INCLUDES = -I/homes/jrbarron/hw2/PUBLIC -I/homes/jrbarron/hw2/include 
+C_INCLUDES = -I/homes/cjohnson88/CPU-Scheduler/PUBLIC -I/homes/cjohnson88/CPU-Scheduler/include 
 

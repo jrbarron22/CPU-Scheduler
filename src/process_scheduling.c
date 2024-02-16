@@ -18,6 +18,17 @@ void virtual_cpu(ProcessControlBlock_t *process_control_block)
     --process_control_block->remaining_burst_time;
 }
 
+// Comparison function for sorting by arrival time
+int compare_by_arrival(const void *a, const void *b) {
+    const ProcessControlBlock_t *pcb_a = *(const ProcessControlBlock_t **)a;
+    const ProcessControlBlock_t *pcb_b = *(const ProcessControlBlock_t **)b;
+
+    // Compare arrival times
+    if (pcb_a->arrival < pcb_b->arrival) return -1;
+    if (pcb_a->arrival > pcb_b->arrival) return 1;
+    return 0;
+}
+
 bool first_come_first_serve(dyn_array_t *ready_queue, ScheduleResult_t *result) 
 {
     // Check for NULL parameters
@@ -25,8 +36,13 @@ bool first_come_first_serve(dyn_array_t *ready_queue, ScheduleResult_t *result)
         return false;
     }
 
-    // Is the ready_queue already sorted by arrival time?
+    // Sort ready_queue by arrival time
+    if (!dyn_array_sort(ready_queue, compare_by_arrival)) {
+        // Error while sorting
+        return false;
+    }
 
+    // Store values for the schedule result stats
     unsigned long time = 0;
     size_t num_PCBs = 0;
     size_t total_wait_time = 0;
@@ -34,6 +50,7 @@ bool first_come_first_serve(dyn_array_t *ready_queue, ScheduleResult_t *result)
     // While ready queue is not empty keep going
     while (!dyn_array_empty(ready_queue)){
         // time when the PCB starts running = that PCBs wait time
+        // NEEDS TO ACCOUNT FOR ARRIVAL TIME
         total_wait_time += time;
         // While there is still burst time on the first PCB
         while (dyn_array_front(ready_queue) != NULL && dyn_array_front(ready_queue)->remaining_burst_time > 0) {

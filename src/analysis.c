@@ -25,6 +25,9 @@ int main(int argc, char **argv)
     ready_queue = load_process_control_blocks(argv(0));
 
     ScheduleResult_t* time_data;
+    &(time_data->average_waiting_time) = malloc(sizeof(float));
+    &(time_data->average_turnaround_time) = malloc(sizeof(float));
+    &(time_data->total_run_time) = malloc(sizeof(unsigned long));
 
     /* Run the First Come First Serve algorithm */
     if(strcmp(argv[1], FCFS) == 0){
@@ -64,6 +67,27 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
     
+    /* Destroy the ready_queue struct */
+    dyn_array_destroy(ready_queue);
+
+    FILE* fp;
+    fp = fopen("../readme.md", "r");
+
+    if(!fp){
+        printf("File Open Error");
+        return EXIT_FAILURE;
+    }
+
+    fprintf(fp, "Average Waiting Time: %s\n", time_data->average_waiting_time);
+    fprintf(fp, "Average Turnaround Time: %s\n", time_data->average_turnaround_time);
+    fprintf(fp, "Total Run Time: %s\n", time_data->total_run_time);
+
+    fclose(fp);
+
+    free(&(time_data->average_waiting_time));
+    free(&(time_data->average_turnaround_time));
+    free(&(time_data->total_run_time));
+    free(time_data);
 
     return EXIT_SUCCESS;
 }

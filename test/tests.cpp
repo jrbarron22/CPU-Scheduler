@@ -35,7 +35,7 @@ class GradeEnvironment : public testing::Environment
 };
 
 // Test case 1: Successfully load PCB burst times from a file
-TEST(LoadProcessControlBlocks, Success) {
+TEST(load_process_control_blocks, Success) {
     // Setup: Create a temporary file and write PCB burst times to it
     const char *tempFileName = "temp_pcb_data.bin";
     FILE *tempFile = fopen(tempFileName, "wb");
@@ -63,7 +63,7 @@ TEST(LoadProcessControlBlocks, Success) {
 }
 
 // Test case 2: Fail to load PCB burst times due to file open error
-TEST(LoadProcessControlBlocks, FileOpenError) {
+TEST(load_process_control_blocks, FileOpenError) {
     // Setup: Use a non-existent file name
     const char *invalidFileName = "non_existent_file.bin";
 

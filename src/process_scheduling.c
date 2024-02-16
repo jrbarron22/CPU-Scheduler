@@ -96,9 +96,40 @@ bool round_robin(dyn_array_t *ready_queue, ScheduleResult_t *result, size_t quan
 
 dyn_array_t *load_process_control_blocks(const char *input_file) 
 {
-    UNUSED(input_file);
-    return NULL;
-}
+        // Open the file for reading in binary mode
+        FILE *file = fopen(input_file, "rb");
+        if (!file) {
+            return NULL; // Error opening file
+        }
+
+        // Create a dynamic array to hold the ProcessControlBlock_t elements
+        dyn_array_t *pcb_array = dyn_array_create(sizeof(ProcessControlBlock_t), 10, NULL);
+        if (!pcb_array) {
+            fclose(file); // Clean up and exit if dynamic array creation failed
+            return NULL;
+        }
+
+        // Read the burst time values from the file and populate the dynamic array
+        uint32_t burst_time;
+        while (fread(&burst_time, sizeof(uint32_t), 1, file) == 1) {
+            ProcessControlBlock_t pcb = {0, 0, 0, 0}; // Initialize PCB to zero
+            pcb.remaining_burst_time = burst_time; // Set the burst time
+            
+            // Insert the PCB into the dynamic array
+            if (!dyn_array_push_back(pcb_array, &pcb)) {
+                // Clean up in case of error
+                dyn_array_destroy(pcb_array);
+                fclose(file);
+                return NULL;
+            }
+        }
+
+        // Close the file
+        fclose(file);
+
+        // Return the populated dynamic array
+        return pcb_array;
+    }
 
 bool shortest_remaining_time_first(dyn_array_t *ready_queue, ScheduleResult_t *result) 
 {

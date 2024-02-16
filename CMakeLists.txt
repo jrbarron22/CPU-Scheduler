@@ -18,6 +18,7 @@ include_directories(PUBLIC include)
 
 # Create library from dyn_array so we can use it later.
 add_library(dyn_array src/dyn_array.c)
+add_library(process_scheduling src/process_scheduling.c)
 
 # Compile the analysis executable.
 add_executable(analysis_test src/analysis.c)

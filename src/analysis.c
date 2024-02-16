@@ -63,7 +63,7 @@ int main(int argc, char **argv)
         printf("Invalid schedule algorithm");
         return EXIT_FAILURE;
     }
-
+    
 
     return EXIT_SUCCESS;
 }

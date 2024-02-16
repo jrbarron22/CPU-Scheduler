@@ -49,26 +49,34 @@ bool first_come_first_serve(dyn_array_t *ready_queue, ScheduleResult_t *result)
 
     // While ready queue is not empty keep going
     while (!dyn_array_empty(ready_queue)){
-        // time when the PCB starts running = that PCBs wait time
-        // NEEDS TO ACCOUNT FOR ARRIVAL TIME
-        total_wait_time += time;
-        // While there is still burst time on the first PCB
-        while (dyn_array_front(ready_queue) != NULL && dyn_array_front(ready_queue)->remaining_burst_time > 0) {
-            // Run the PCB on the virtual cpu
-            virtual_cpu(dyn_array_front(ready_queue));
-            dyn_array_front(ready_queue)->started = true;
+        // Get the next pcb
+        ProcessControlBlock_t *current_pcb = dyn_array_front(ready_queue);
+
+        // time when the PCB starts running minus arrival time = that PCBs wait time
+        total_wait_time += time - current_pcb->arrival;
+
+        // While there is still burst time on the first PCB run the PCB on the virtual cpu
+        while (current_pcb != NULL && current_pcb->remaining_burst_time > 0) {
+            virtual_cpu(current_pcb);
+            current_pcb->started = true;
             ++time;
         }
+
         // Pop finished PCB
         if (!dyn_array_pop_front(ready_queue)) {
             // error with pop
             return false;
         }
+
         ++num_PCBs;
     }
+
+    // Calculate values for result
     result->average_waiting_time = (float)total_wait_time / num_PCBs;
     result->average_turnaround_time = (float)time / num_PCBs;
     result->total_run_time = time;
+
+    //Successfully scheduled
     return true;
 }
 

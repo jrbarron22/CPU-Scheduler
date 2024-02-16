@@ -10,7 +10,7 @@ extern "C"
 #include <dyn_array.h>
 }
 
-
+/*
 #define NUM_PCB 30
 #define QUANTUM 5 // Used for Robin Round for process as the run time limit
 
@@ -33,6 +33,7 @@ class GradeEnvironment : public testing::Environment
             std::cout << "SCORE: " << score << '/' << total << std::endl;
         }
 };
+*/
 
 // Test case 1: Successfully load PCB burst times from a file
 TEST(load_process_control_blocks, Success) {
@@ -77,6 +78,6 @@ TEST(load_process_control_blocks, FileOpenError) {
 int main(int argc, char **argv) 
 {
     ::testing::InitGoogleTest(&argc, argv);
-    ::testing::AddGlobalTestEnvironment(new GradeEnvironment);
+    //::testing::AddGlobalTestEnvironment(new GradeEnvironment);
     return RUN_ALL_TESTS();
 }

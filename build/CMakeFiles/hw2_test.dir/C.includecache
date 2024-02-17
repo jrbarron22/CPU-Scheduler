@@ -26,6 +26,10 @@ stdint.h
 dyn_array.h
 ../include/dyn_array.h
 
+/homes/cjohnson88/CPU-Scheduler/src/dyn_array.c
+dyn_array.h
+/homes/cjohnson88/CPU-Scheduler/src/dyn_array.h
+
 /homes/cjohnson88/CPU-Scheduler/src/process_scheduling.c
 fcntl.h
 -

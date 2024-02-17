@@ -18,13 +18,14 @@ include_directories(PUBLIC include)
 
 # Create library from dyn_array so we can use it later.
 add_library(dyn_array src/dyn_array.c)
+add_library(process_scheduling src/process_scheduling.c)
 
 # Compile the analysis executable.
 add_executable(analysis_test src/analysis.c)
 target_compile_definitions(analysis_test PRIVATE)
 
 # link the dyn_array library we compiled against our analysis executable.
-target_link_libraries(analysis_test gtest pthread dyn_array)
+target_link_libraries(analysis_test gtest pthread dyn_array process_scheduling)
 
 # Compile the the tester executable.
 add_executable(${PROJECT_NAME}_test test/tests.cpp src/dyn_array.c src/process_scheduling.c)

@@ -58,7 +58,7 @@ bool first_come_first_serve(dyn_array_t *ready_queue, ScheduleResult_t *result)
         // While there is still burst time on the first PCB run the PCB on the virtual cpu
         while (current_pcb != NULL && current_pcb->remaining_burst_time > 0) {
             virtual_cpu(current_pcb);
-            current_pcb->started = true;
+           current_pcb->started = true;
             ++time;
         }
 

@@ -75,6 +75,52 @@ TEST(load_process_control_blocks, FileOpenError) {
     ASSERT_TRUE(pcbArray == NULL);
 }
 
+/*
+* Tests for First Come First Serve function
+*/
+
+TEST(first_come_first_serve, MultiplePCBs) {
+    // Create a ready queue
+    dyn_array_t *ready_queue = dyn_array_create(0, sizeof(ProcessControlBlock_t), NULL);
+    ScheduleResult_t result;
+
+    // Set up pcbs with different arrival times and burst times
+    ProcessControlBlock_t pcb1 = {10, 1, 0, false};
+    ProcessControlBlock_t pcb2 = {3, 1, 5, false};
+    ProcessControlBlock_t pcb3 = {7, 1, 5, false};
+
+    //Fill the ready queue with the test pcbs
+    dyn_array_push_back(ready_queue, &pcb1);
+    dyn_array_push_back(ready_queue, &pcb2);
+    dyn_array_push_back(ready_queue, &pcb3);
+
+    // run FCFS
+    bool test = first_come_first_serve(ready_queue, &result);
+
+    // function succeeded and emptied the queue
+    ASSERT_TRUE(test);
+    ASSERT_TRUE(dyn_array_empty(ready_queue));
+
+    // Clean up
+    dyn_array_destroy(ready_queue);
+}
+
+TEST(first_come_first_serve, EmptyQueue) {
+    // Create a ready queue
+    dyn_array_t *ready_queue = dyn_array_create(0, sizeof(ProcessControlBlock_t), NULL);
+    ScheduleResult_t result;
+    
+    // run FCFS with empty queue
+    bool test = first_come_first_serve(ready_queue, &result);
+
+    // function succeeded and queue is still empty
+    ASSERT_TRUE(test);
+    ASSERT_TRUE(dyn_array_empty(ready_queue));
+    
+    // Clean up
+    dyn_array_destroy(ready_queue);    
+}
+
 int main(int argc, char **argv) 
 {
     ::testing::InitGoogleTest(&argc, argv);

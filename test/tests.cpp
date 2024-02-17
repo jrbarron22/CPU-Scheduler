@@ -86,8 +86,8 @@ TEST(first_come_first_serve, MultiplePCBs) {
 
     // Set up pcbs with different arrival times and burst times
     ProcessControlBlock_t pcb1 = {10, 1, 0, false};
-    ProcessControlBlock_t pcb2 = {3, 1, 5, false};
-    ProcessControlBlock_t pcb3 = {7, 1, 5, false};
+    ProcessControlBlock_t pcb2 = {3, 2, 5, false};
+    ProcessControlBlock_t pcb3 = {7, 3, 5, false};
 
     //Fill the ready queue with the test pcbs
     dyn_array_push_back(ready_queue, &pcb1);
@@ -114,9 +114,9 @@ TEST(first_come_first_serve, EmptyQueue) {
     bool test = first_come_first_serve(ready_queue, &result);
 
     // function succeeded and queue is still empty
-    ASSERT_TRUE(test);
+    ASSERT_FALSE(test);
     ASSERT_TRUE(dyn_array_empty(ready_queue));
-    
+
     // Clean up
     dyn_array_destroy(ready_queue);    
 }

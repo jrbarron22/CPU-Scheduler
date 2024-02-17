@@ -20,8 +20,8 @@ void virtual_cpu(ProcessControlBlock_t *process_control_block)
 
 // Comparison function for sorting by arrival time
 int compare_by_arrival(const void *a, const void *b) {
-    const ProcessControlBlock_t *pcb_a = *(const ProcessControlBlock_t **)a;
-    const ProcessControlBlock_t *pcb_b = *(const ProcessControlBlock_t **)b;
+    const ProcessControlBlock_t *pcb_a = (const ProcessControlBlock_t *)a;
+    const ProcessControlBlock_t *pcb_b = (const ProcessControlBlock_t *)b;
 
     // Compare arrival times
     if (pcb_a->arrival < pcb_b->arrival) return -1;
@@ -51,6 +51,11 @@ bool first_come_first_serve(dyn_array_t *ready_queue, ScheduleResult_t *result)
     while (!dyn_array_empty(ready_queue)){
         // Get the next pcb
         ProcessControlBlock_t *current_pcb = dyn_array_front(ready_queue);
+
+        if (current_pcb == NULL) {
+            //error with dyn_array_front
+            return false;
+        }
 
         // time when the PCB starts running minus arrival time = that PCBs wait time
         total_wait_time += time - current_pcb->arrival;

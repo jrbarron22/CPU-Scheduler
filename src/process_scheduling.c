@@ -29,13 +29,23 @@ int compare_by_arrival(const void *a, const void *b) {
     return 0;
 }
 
+// Comparison function for sorting by burst time
+int compare_by_burst_time(const void *a, const void *b) {
+    const ProcessControlBlock_t *pcb_a = (const ProcessControlBlock_t *)a;
+    const ProcessControlBlock_t *pcb_b = (const ProcessControlBlock_t *)b;
+
+    // Compare arrival times
+    if (pcb_a->remaining_burst_time < pcb_b->remaining_burst_time) return -1;
+    if (pcb_a->remaining_burst_time > pcb_b->remaining_burst_time) return 1;
+    return 0;
+}
+
 bool first_come_first_serve(dyn_array_t *ready_queue, ScheduleResult_t *result) 
 {
     // Check for NULL parameters
     if (ready_queue == NULL || result == NULL) {
         return false;
     }
-
     // Sort ready_queue by arrival time
     if (!dyn_array_sort(ready_queue, compare_by_arrival)) {
         // Error while sorting
@@ -51,28 +61,23 @@ bool first_come_first_serve(dyn_array_t *ready_queue, ScheduleResult_t *result)
     while (!dyn_array_empty(ready_queue)){
         // Get the next pcb
         ProcessControlBlock_t *current_pcb = dyn_array_front(ready_queue);
-
         if (current_pcb == NULL) {
             //error with dyn_array_front
             return false;
         }
-
         // time when the PCB starts running minus arrival time = that PCBs wait time
         total_wait_time += time - current_pcb->arrival;
-
         // While there is still burst time on the first PCB run the PCB on the virtual cpu
-        while (current_pcb != NULL && current_pcb->remaining_burst_time > 0) {
+        while (current_pcb->remaining_burst_time > 0) {
             virtual_cpu(current_pcb);
-           current_pcb->started = true;
+            current_pcb->started = true;
             ++time;
         }
-
         // Pop finished PCB
         if (!dyn_array_pop_front(ready_queue)) {
             // error with pop
             return false;
         }
-
         ++num_PCBs;
     }
 
@@ -87,9 +92,87 @@ bool first_come_first_serve(dyn_array_t *ready_queue, ScheduleResult_t *result)
 
 bool shortest_job_first(dyn_array_t *ready_queue, ScheduleResult_t *result) 
 {
-    UNUSED(ready_queue);
-    UNUSED(result);
-    return false;   
+    // Check for NULL parameters
+    if (ready_queue == NULL || result == NULL) {
+        return false;
+    }
+    // Sort ready_queue by arrival time
+    if (!dyn_array_sort(ready_queue, compare_by_arrival)) {
+        // Error while sorting
+        return false;
+    }
+    
+    // Store values for the schedule result stats
+    unsigned long time = 0;
+    size_t num_PCBs = 0;
+    size_t total_wait_time = 0;
+
+    dyn_array_t *waiting_queue = dyn_array_create(0, sizeof(ProcessControlBlock_t), NULL);
+
+    //While there are still unscheduled pcbs
+    while (!dyn_array_empty(ready_queue) || !dyn_array_empty(waiting_queue)) {
+        // While ready queue is not empty and pcb has arrived
+        while (!dyn_array_empty(ready_queue) && ((ProcessControlBlock_t*)dyn_array_front(ready_queue))->arrival <= time){
+            ProcessControlBlock_t *wait_pcb = dyn_array_front(ready_queue);
+            if (wait_pcb == NULL) {
+                return false;
+            }
+
+            //Push to the wait queue
+            if (!dyn_array_push_back(waiting_queue, wait_pcb)) {
+                // error with push
+                return false;
+            }
+            //Pop from the ready queue
+            if (!dyn_array_pop_front(ready_queue)) {
+                // error with pop
+                return false;
+            }
+        }
+
+        if (!dyn_array_empty(waiting_queue)) {
+            // Sort waiting queue by burst time
+            if (!dyn_array_sort(waiting_queue, compare_by_burst_time)) {
+                // Error while sorting
+                printf("1");
+                dyn_array_destroy(waiting_queue);
+                return false;
+            }
+        }
+
+        //If there are waiting PCBs run one then jump back to the top to check for the next shortest available job
+        if(!dyn_array_empty(waiting_queue)) {
+            // Get the next pcb to schedule
+            ProcessControlBlock_t *current_pcb = dyn_array_front(waiting_queue);
+            if (current_pcb == NULL) {
+                //error with dyn_array_front
+                return false;
+            }
+            // time when the PCB starts running minus arrival time = that PCBs wait time
+            total_wait_time += time - current_pcb->arrival;
+
+            // While there is still burst time run the PCB on the virtual cpu
+            while (current_pcb->remaining_burst_time > 0) {
+                virtual_cpu(current_pcb);
+                current_pcb->started = true;
+                ++time;
+            }
+            // Pop finished PCB
+            if (!dyn_array_pop_front(waiting_queue)) {
+                // error with pop
+                return false;
+            }
+            ++num_PCBs;
+        }
+    }
+
+    // Calculate values for result
+    result->average_waiting_time = (float)total_wait_time / num_PCBs;
+    result->average_turnaround_time = (float)time / num_PCBs;
+    result->total_run_time = time;
+
+    //Successfully scheduled
+    return true;  
 }
 
 bool priority(dyn_array_t *ready_queue, ScheduleResult_t *result) 

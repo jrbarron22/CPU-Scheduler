@@ -122,14 +122,14 @@ TEST(first_come_first_serve, EmptyQueue) {
 }
 
 TEST(RoundRobinScheduler, SingleProcess) {
-    dyn_array_t *ready_queue = dyn_array_create(1, sizeof(ProcessControlBlock_t), NULL);
-    ProcessControlBlock_t pcb = {0, 10, 0, false}; // arrival time: 0, burst time: 10, started: false
+    dyn_array_t *ready_queue = dyn_array_create(0, sizeof(ProcessControlBlock_t), NULL);
+    ProcessControlBlock_t pcb = {1, 10, 0, false}; // arrival time: 0, burst time: 10, started: false
     dyn_array_push_back(ready_queue, &pcb);
     
     ScheduleResult_t result;
     size_t quantum = 5;
     unsigned long int total = 10;
-    
+
     bool success = round_robin(ready_queue, &result, quantum);
     
     ASSERT_TRUE(success);
@@ -162,6 +162,49 @@ TEST(RoundRobinScheduler, MultipleProcesses) {
     ASSERT_FLOAT_EQ(29, result.average_turnaround_time);
     ASSERT_EQ(total, result.total_run_time);
     
+    dyn_array_destroy(ready_queue);
+}
+
+TEST(shortest_job_first, EmptyQueue) {
+    // Create an empty ready queue
+    dyn_array_t *ready_queue = dyn_array_create(0, sizeof(ProcessControlBlock_t), NULL);
+    ScheduleResult_t result;
+    
+    // run FCFS with empty queue
+    bool test = shortest_job_first(ready_queue, &result);
+
+    // function succeeded and queue is still empty
+    ASSERT_FALSE(test);
+    ASSERT_TRUE(dyn_array_empty(ready_queue));
+
+    // Clean up
+    dyn_array_destroy(ready_queue);    
+}
+
+TEST(shortest_job_first, MultiplePCBs) {
+    // Create a ready queue
+    dyn_array_t *ready_queue = dyn_array_create(0, sizeof(ProcessControlBlock_t), NULL);
+    ScheduleResult_t result;
+
+    // Set up pcbs with different arrival times and burst times
+    ProcessControlBlock_t pcb1 = {10, 1, 0, false}; //burst, priority, arrival, started
+    ProcessControlBlock_t pcb2 = {3, 2, 5, false};
+    ProcessControlBlock_t pcb3 = {7, 3, 5, false};
+
+    //Fill the ready queue with the test pcbs
+    dyn_array_push_back(ready_queue, &pcb1);
+    dyn_array_push_back(ready_queue, &pcb2);
+    dyn_array_push_back(ready_queue, &pcb3);
+
+    // run FCFS
+    bool test = first_come_first_serve(ready_queue, &result);
+
+    // function succeeded and emptied the queue
+    ASSERT_TRUE(test);
+    ASSERT_TRUE(dyn_array_empty(ready_queue));
+    ASSERT_TRUE(result.total_run_time == 20);
+
+    // Clean up
     dyn_array_destroy(ready_queue);
 }
 

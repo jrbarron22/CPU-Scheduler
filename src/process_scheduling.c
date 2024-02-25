@@ -229,7 +229,52 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
 
 bool shortest_remaining_time_first(dyn_array_t *ready_queue, ScheduleResult_t *result) 
 {
-    UNUSED(ready_queue);
-    UNUSED(result);
-    return false;
+    // Check for NULL parameters
+    if (ready_queue == NULL || result == NULL) {
+        return false;
+    }
+    // Sort ready_queue by arrival time
+    if (!dyn_array_sort(ready_queue, compare_by_arrival)) {
+        // Error while sorting
+        return false;
+    }
+    
+    // Store values for the schedule result stats
+    unsigned long time = 0;
+    size_t num_PCBs = 0;
+    size_t total_wait_time = 0;
+
+    dyn_array_t *waiting_queue = dyn_array_create(0, sizeof(ProcessControlBlock_t), NULL);
+
+    uint32_t current_cycle = 0;
+
+    /* Loop through until the waiting queue and ready queue are empty */
+    while(!dyn_array_empty(waiting_queue) || !dyn_array_empty(ready_queue)){
+        
+        /* Moves all of the pcbs with the current arrival time to the back of the waiting queue */
+        while(dyn_array_front(ready_queue)->arrival == current_cycle){
+            waiting_queue.dyn_array_push_back(ready_queue.dyn_array_pop_front());
+        }
+
+        /* Sorts waiting queue by burst time */
+        if(sizeof(waiting_queue) > 1){
+            dyn_array_sort(waiting_queue, compare_by_burst_time);
+        }
+
+        /* Gives one cycle of the CPU to the front of the waiting queue which has the shortest burst time */
+        virtual_cpu(dyn_array_front(waiting_queue));
+        ++time;
+
+        /* Remove the front of the waiting queue if its burst time is complete */
+        if(dyn_array_front(waiting_queue)->burst_time < 1){
+            if(!dyn_array_pop_front(waiting_queue)) return false;
+            num_PCBs++;
+        }
+    }
+
+    /* Calculate values for result */
+    result->average_waiting_time = (float)total_wait_time / num_PCBs;
+    result->average_turnaround_time = (float)time / num_PCBs;
+    result->total_run_time = time;
+    return true;
 }

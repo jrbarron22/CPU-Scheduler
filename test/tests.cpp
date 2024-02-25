@@ -121,6 +121,50 @@ TEST(first_come_first_serve, EmptyQueue) {
     dyn_array_destroy(ready_queue);    
 }
 
+TEST(RoundRobinScheduler, SingleProcess) {
+    dyn_array_t *ready_queue = dyn_array_create(1, sizeof(ProcessControlBlock_t), NULL);
+    ProcessControlBlock_t pcb = {0, 10, 0, false}; // arrival time: 0, burst time: 10, started: false
+    dyn_array_push_back(ready_queue, &pcb);
+    
+    ScheduleResult_t result;
+    size_t quantum = 5;
+    //unsigned long int total = 10;
+    
+    bool success = round_robin(ready_queue, &result, quantum);
+    
+    ASSERT_TRUE(success);
+    ASSERT_FLOAT_EQ(0.0, result.average_waiting_time); // No waiting time for a single process
+    ASSERT_FLOAT_EQ(10.0, result.average_turnaround_time); // Turnaround time equals burst time
+    ASSERT_EQ(total, result.total_run_time); // Total run time equals burst time
+    
+    dyn_array_destroy(ready_queue);
+}
+
+TEST(RoundRobinScheduler, MultipleProcesses) {
+    dyn_array_t *ready_queue = dyn_array_create(3, sizeof(ProcessControlBlock_t), NULL);
+    ProcessControlBlock_t pcb1 = {0, 10, 0, false};
+    ProcessControlBlock_t pcb2 = {1, 20, 0, false};
+    ProcessControlBlock_t pcb3 = {2, 30, 0, false}; // Processes with different arrival and burst times
+    dyn_array_push_back(ready_queue, &pcb1);
+    dyn_array_push_back(ready_queue, &pcb2);
+    dyn_array_push_back(ready_queue, &pcb3);
+    
+    ScheduleResult_t result;
+    size_t quantum = 10;
+    unsigned long int total = 50;
+    
+    bool success = round_robin(ready_queue, &result, quantum);
+    
+    
+    ASSERT_TRUE(success);
+
+    ASSERT_FLOAT_EQ(9, result.average_waiting_time);
+    ASSERT_FLOAT_EQ(29, result.average_turnaround_time);
+    ASSERT_EQ(total, result.total_run_time);
+    
+    dyn_array_destroy(ready_queue);
+}
+
 int main(int argc, char **argv) 
 {
     ::testing::InitGoogleTest(&argc, argv);

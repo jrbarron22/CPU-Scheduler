@@ -128,7 +128,7 @@ TEST(RoundRobinScheduler, SingleProcess) {
     
     ScheduleResult_t result;
     size_t quantum = 5;
-    //unsigned long int total = 10;
+    unsigned long int total = 10;
     
     bool success = round_robin(ready_queue, &result, quantum);
     

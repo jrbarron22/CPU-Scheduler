@@ -182,62 +182,51 @@ bool priority(dyn_array_t *ready_queue, ScheduleResult_t *result)
     return false;   
 }
 
+// Function to simulate Round Robin scheduling on a set of processes
 bool round_robin(dyn_array_t *ready_queue, ScheduleResult_t *result, size_t quantum) {
-    if (!ready_queue || !result || quantum == 0) {
-        return false; // Error handling for invalid input
+    // Validate input parameters
+    if (!ready_queue || !result || quantum == 0 || dyn_array_empty(ready_queue)) {
+        return false; // Return false if any input parameter is invalid
     }
 
-    unsigned long current_time = 0;
-    unsigned long total_waiting_time = 0;
-    unsigned long total_turnaround_time = 0;
-    int completed_processes = 0;
+    // Initialize timing and process count variables
+    unsigned long current_time = 0; // Tracks the current time in the simulation
+    unsigned long total_waiting_time = 0; // Accumulates total waiting time of all processes
+    unsigned long total_turnaround_time = 0; // Accumulates total turnaround time of all processes
+    int process_count = dyn_array_size(ready_queue); // Number of processes in the queue
+    unsigned long* execution_times = calloc(process_count, sizeof(unsigned long)); // Array to track execution time of each process
 
-    while (!dyn_array_empty(ready_queue)) {
-        ProcessControlBlock_t *pcb = (ProcessControlBlock_t*)dyn_array_front(ready_queue);
-        if (pcb == NULL) {
-            return false; // Error handling for null PCB
+    // Main loop to process each PCB (Process Control Block) in the queue
+    while (process_count > 0) {
+        bool didProcess = false; // Flag to check if any process was executed in the current cycle
+        for (size_t i = 0; i < dyn_array_size(ready_queue); ++i) {
+            ProcessControlBlock_t* pcb = dyn_array_at(ready_queue, i); // Get the process at position i
+            if (pcb->remaining_burst_time > 0) { // Check if the process still has burst time left
+                didProcess = true; // Set the flag indicating a process was executed
+                // Calculate the time slice given to the process (either the full quantum or remaining burst time if less)
+                unsigned long time_slice = (pcb->remaining_burst_time < quantum) ? pcb->remaining_burst_time : quantum;
+                pcb->remaining_burst_time -= time_slice; // Decrease the remaining burst time by the time slice
+                current_time += time_slice; // Increment current time by the time slice
+                execution_times[i] += time_slice; // Track execution time for this process
+
+                if (pcb->remaining_burst_time == 0) { // If the process has completed execution
+                    total_turnaround_time += current_time; // Update total turnaround time
+                    total_waiting_time += current_time - execution_times[i]; // Update total waiting time
+                    --process_count; // Decrement the process count
+                }
+            }
         }
-
-        // Calculate the actual time slice given to this process
-        unsigned long time_slice = (pcb->remaining_burst_time <= quantum) ? pcb->remaining_burst_time : quantum;
-
-        if (!pcb->started) {
-            pcb->started = true;
-            pcb->start_time = current_time; // Record the start time of the process
-        }
-
-        // Update the current time and remaining burst time of the process
-        current_time += time_slice;
-        pcb->remaining_burst_time -= time_slice;
-
-        if (pcb->remaining_burst_time == 0) {
-            // Process completes its execution
-            unsigned long turnaround_time = current_time - pcb->arrival;
-            total_turnaround_time += turnaround_time;
-            total_waiting_time += pcb->start_time - pcb->arrival; // Waiting time is the start time minus the arrival time
-            completed_processes++;
-
-            // Remove the completed process from the queue
-            dyn_array_pop_front(ready_queue);
-        } else {
-            // If process does not complete, move it to the back of the queue
-            dyn_array_push_back(ready_queue, pcb);
-            dyn_array_pop_front(ready_queue);
-        }
+        // If no process was executed in the current cycle, break the loop to avoid an infinite loop
+        if (!didProcess) break;
     }
 
-    // Compute the averages and total run time for the result
-    if (completed_processes > 0) {
-        result->average_waiting_time = (float)total_waiting_time / completed_processes;
-        result->average_turnaround_time = (float)total_turnaround_time / completed_processes;
-    } else {
-        // No processes were completed
-        result->average_waiting_time = 0.0f;
-        result->average_turnaround_time = 0.0f;
-    }
-    result->total_run_time = current_time;
+    // Calculate and set the average waiting time and turnaround time in the result structure
+    result->average_waiting_time = (float)total_waiting_time / dyn_array_size(ready_queue);
+    result->average_turnaround_time = (float)total_turnaround_time / dyn_array_size(ready_queue);
+    result->total_run_time = current_time; // Set the total run time in the result structure
 
-    return true;
+    free(execution_times); // Free the dynamically allocated memory for execution times
+    return true; // Return true to indicate successful execution
 }
 
 dyn_array_t *load_process_control_blocks(const char *input_file) 
@@ -258,7 +247,7 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
     // Read the burst time values from the file and populate the dynamic array
     uint32_t burst_time;
     while (fread(&burst_time, sizeof(uint32_t), 1, file) == 1) {
-        ProcessControlBlock_t pcb = {0, 0, 0, 0, 0}; // Initialize PCB to zero
+        ProcessControlBlock_t pcb = {0, 0, 0, 0}; // Initialize PCB to zero
         pcb.remaining_burst_time = burst_time; // Set the burst time
         
         // Insert the PCB into the dynamic array

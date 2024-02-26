@@ -121,6 +121,7 @@ TEST(first_come_first_serve, EmptyQueue) {
     dyn_array_destroy(ready_queue);    
 }
 
+
 TEST(RoundRobinScheduler, SingleProcess) {
     dyn_array_t *ready_queue = dyn_array_create(0, sizeof(ProcessControlBlock_t), NULL);
     ProcessControlBlock_t pcb = {1, 10, 0, false}; // arrival time: 0, burst time: 10, started: false
@@ -165,6 +166,7 @@ TEST(RoundRobinScheduler, MultipleProcesses) {
     dyn_array_destroy(ready_queue);
 }
 
+
 TEST(shortest_job_first, EmptyQueue) {
     // Create an empty ready queue
     dyn_array_t *ready_queue = dyn_array_create(0, sizeof(ProcessControlBlock_t), NULL);
@@ -205,6 +207,50 @@ TEST(shortest_job_first, MultiplePCBs) {
     ASSERT_TRUE(result.total_run_time == 20);
 
     // Clean up
+    dyn_array_destroy(ready_queue);
+}
+
+TEST(shortest_remaining_time_first, EmptyQueue){
+    // Create an empty ready queue
+    dyn_array_t *ready_queue = dyn_array_create(0, sizeof(ProcessControlBlock_t), NULL);
+    ScheduleResult_t result;
+    
+    // run shortest_reamining_time_first with empty queue
+    bool test = shortest_remaining_time_first(ready_queue, &result);
+
+    // function succeeded and queue is still empty
+    ASSERT_FALSE(test);
+    ASSERT_TRUE(dyn_array_empty(ready_queue));
+
+    // Clean up
+    dyn_array_destroy(ready_queue); 
+}
+
+TEST(shortest_remaining_time_first, MultiplePCBs){
+    //Create a ready queue
+    dyn_array_t *ready_queue = dyn_array_create(0, sizeof(ProcessControlBlock_t), NULL);
+    ScheduleResult_t result;
+
+    // Set up pcbs with different arrival times and burst times
+    ProcessControlBlock_t pcb1 = {6, 1, 0, false}; //burst, priority, arrival, started
+    ProcessControlBlock_t pcb2 = {3, 2, 5, false};
+    ProcessControlBlock_t pcb3 = {3, 3, 3, false};
+    ProcessControlBlock_t pcb4 = {2, 3, 2, false};
+
+    //Fill the ready queue with the test pcbs
+    dyn_array_push_back(ready_queue, &pcb1);
+    dyn_array_push_back(ready_queue, &pcb2);
+    dyn_array_push_back(ready_queue, &pcb3);
+    dyn_array_push_back(ready_queue, &pcb4);
+
+    //Run shortest_remaining_time_first algorithm
+    bool test = shortest_remaining_time_first(ready_queue, &result);
+
+    ASSERT_TRUE(test);
+    ASSERT_TRUE(dyn_array_empty(ready_queue));
+    ASSERT_FLOAT_EQ(5.25, result.average_turnaround_time);
+
+    //Clean Up
     dyn_array_destroy(ready_queue);
 }
 

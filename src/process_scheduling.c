@@ -277,6 +277,7 @@ bool shortest_remaining_time_first(dyn_array_t *ready_queue, ScheduleResult_t *r
     unsigned long time = 0;
     size_t num_PCBs = 0;
     size_t total_wait_time = 0;
+    size_t turnaround_time = 0;
 
     dyn_array_t *waiting_queue = dyn_array_create(0, sizeof(ProcessControlBlock_t), NULL);
 
@@ -285,9 +286,26 @@ bool shortest_remaining_time_first(dyn_array_t *ready_queue, ScheduleResult_t *r
     /* Loop through until the waiting queue and ready queue are empty */
     while(!dyn_array_empty(waiting_queue) || !dyn_array_empty(ready_queue)){
         
-        /* Moves all of the pcbs with the current arrival time to the back of the waiting queue */
-        while(dyn_array_front(ready_queue)->arrival == current_cycle){
-            waiting_queue.dyn_array_push_back(ready_queue.dyn_array_pop_front());
+        /* Checks if the ready_queue is empty */
+        if(dyn_array_size(ready_queue) > 0){
+            
+            /* The front pcb of the ready_queue */
+            ProcessControlBlock_t *potential_pcb = dyn_array_front(ready_queue);
+
+            /* If ready queue has something and the front pcb has the arrival time of the current cycle */
+            while(potential_pcb->arrival == current_cycle && dyn_array_size(ready_queue) > 0){
+
+                /* Push the pcb from the front of the ready queue to the back of the waiting queue*/
+                dyn_array_push_back(waiting_queue, potential_pcb);
+
+                /* Remove the front pcb from the ready queue*/
+                dyn_array_erase(ready_queue, 0);
+
+                /* If the ready queue still has more blocks, check the next block's arrival time */
+                if(dyn_array_size(ready_queue) > 0){
+                    potential_pcb = dyn_array_front(ready_queue);
+                } 
+            }
         }
 
         /* Sorts waiting queue by burst time */
@@ -295,20 +313,33 @@ bool shortest_remaining_time_first(dyn_array_t *ready_queue, ScheduleResult_t *r
             dyn_array_sort(waiting_queue, compare_by_burst_time);
         }
 
+        ProcessControlBlock_t *cur_pcb = dyn_array_front(waiting_queue);
+
         /* Gives one cycle of the CPU to the front of the waiting queue which has the shortest burst time */
-        virtual_cpu(dyn_array_front(waiting_queue));
+        virtual_cpu(cur_pcb);
         ++time;
 
         /* Remove the front of the waiting queue if its burst time is complete */
-        if(dyn_array_front(waiting_queue)->burst_time < 1){
-            if(!dyn_array_pop_front(waiting_queue)) return false;
+        if(cur_pcb->remaining_burst_time < 1){
+            /* Adds this PCBs turnaround time (current time - arrival time) */
+            turnaround_time += (time - cur_pcb->arrival);
+            dyn_array_erase(waiting_queue, 0);
             num_PCBs++;
         }
+
+        /* All of the blocks in the waiting queue are waiting besides the first block 
+            So, total wait time adds the number of blocks waiting minus 1 */
+        total_wait_time += dyn_array_size(waiting_queue) - 1;
+
+        /* Increment cycle for arrival times */
+        current_cycle++;
     }
 
     /* Calculate values for result */
     result->average_waiting_time = (float)total_wait_time / num_PCBs;
-    result->average_turnaround_time = (float)time / num_PCBs;
+    result->average_turnaround_time = (float)(total_wait_time + time) / num_PCBs;
     result->total_run_time = time;
+    
+    /* Successfully Scheduled */
     return true;
 }

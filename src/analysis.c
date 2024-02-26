@@ -8,6 +8,7 @@
 #define P "P"
 #define RR "RR"
 #define SJF "SJF"
+#define SRTF "SRTF"
 
 // Add and comment your analysis code in this function.
 // THIS IS NOT FINISHED.
@@ -22,21 +23,21 @@ int main(int argc, char **argv)
     //abort();  // replace me with implementation.
     /* Create Ready Queue */
     dyn_array_t* ready_queue;
-    ready_queue = load_process_control_blocks(argv[0]);
+    ready_queue = load_process_control_blocks(argv[1]);
 
     ScheduleResult_t* time_data = (ScheduleResult_t*)malloc(sizeof(ScheduleResult_t));
 
     /* Run the First Come First Serve algorithm */
     if(strcmp(argv[2], FCFS) == 0){
         if(!first_come_first_serve(ready_queue, time_data)){
-            printf("Scheduling Algorithm Failed");
+            printf("Scheduling Algorithm Failed\n");
             return EXIT_FAILURE;
         }
     }
 
     /* Milestone says to do shortest time remaining first, not priority */
-    else if(strcmp(argv[2], P) == 0){
-        if(!priority(ready_queue, time_data)){
+    else if(strcmp(argv[2], SRTF) == 0){
+        if(!shortest_remaining_time_first(ready_queue, time_data)){
             printf("Scheduling Algorithm Failed");
             return EXIT_FAILURE;
         }

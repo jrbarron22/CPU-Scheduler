@@ -9,7 +9,6 @@
 
 // You might find this handy.  I put it around unused parameters, but you should
 // remove it before you submit. Just allows things to compile initially.
-#define UNUSED(x) (void)(x)
 
 // private function
 void virtual_cpu(ProcessControlBlock_t *process_control_block) 
@@ -253,6 +252,7 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
         return NULL; // Error opening file
     }
 
+    //Read in the first integer which is
     uint32_t num_blocks;
     if(fread(&num_blocks, sizeof(uint32_t), 1, file) != 1){
         fclose(file);
@@ -271,11 +271,15 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
         uint32_t priority;
         uint32_t arrival_time;
 
+        /* Create empty PCB */
         ProcessControlBlock_t new_pcb = {0, 0, 0, false};
-        fread(&burst_time, sizeof(uint32_t), 1, file);
-        fread(&priority, sizeof(uint32_t), 1, file);
-        fread(&arrival_time, sizeof(uint32_t), 1, file);
 
+        /* Reads from the file to the variables */
+        if(fread(&burst_time, sizeof(uint32_t), 1, file) != 1) return NULL;
+        if(fread(&priority, sizeof(uint32_t), 1, file) != 1) return NULL;
+        if(fread(&arrival_time, sizeof(uint32_t), 1, file) != 1) return NULL;
+
+        /* Set the fields of the struct */
         new_pcb.remaining_burst_time = burst_time;
         new_pcb.priority = priority;
         new_pcb.arrival = arrival_time;
@@ -313,6 +317,8 @@ bool shortest_remaining_time_first(dyn_array_t *ready_queue, ScheduleResult_t *r
     size_t num_PCBs = 0;
     size_t total_wait_time = 0;
 
+    /* This is the queue for all pcb blocks whose arrival time is 
+        less than or equal to the current number of cycles*/
     dyn_array_t *waiting_queue = dyn_array_create(0, sizeof(ProcessControlBlock_t), NULL);
 
     uint32_t current_cycle = 0;

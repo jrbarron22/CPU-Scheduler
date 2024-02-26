@@ -11,7 +11,6 @@
 #define SRTF "SRTF"
 
 // Add and comment your analysis code in this function.
-// THIS IS NOT FINISHED.
 int main(int argc, char **argv) 
 {
     if (argc < 3) 
@@ -67,7 +66,7 @@ int main(int argc, char **argv)
         printf("Round Robin\n");
         fprintf(fp, "Round Robin\n");
     }
-
+    
     /* Run the Shortest Job First Algorithm */
     else if(strcmp(argv[2], SJF) == 0){
         if(!shortest_job_first(ready_queue, time_data)){

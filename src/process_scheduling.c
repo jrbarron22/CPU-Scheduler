@@ -232,21 +232,35 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
         return NULL; // Error opening file
     }
 
+    uint32_t num_blocks;
+    if(fread(&num_blocks, sizeof(uint32_t), 1, file) != 1){
+        fclose(file);
+        return NULL; //Error reading from file
+    }
+
     // Create a dynamic array to hold the ProcessControlBlock_t elements
-    dyn_array_t *pcb_array = dyn_array_create(sizeof(ProcessControlBlock_t), 10, NULL);
+    dyn_array_t *pcb_array = dyn_array_create(num_blocks, sizeof(ProcessControlBlock_t), NULL);
     if (!pcb_array) {
         fclose(file); // Clean up and exit if dynamic array creation failed
         return NULL;
     }
 
-    // Read the burst time values from the file and populate the dynamic array
-    uint32_t burst_time;
-    while (fread(&burst_time, sizeof(uint32_t), 1, file) == 1) {
-        ProcessControlBlock_t pcb = {0, 0, 0, 0}; // Initialize PCB to zero
-        pcb.remaining_burst_time = burst_time; // Set the burst time
-        
+    for(uint32_t i = 0; i < num_blocks; i++){
+        uint32_t burst_time;
+        uint32_t priority;
+        uint32_t arrival_time;
+
+        ProcessControlBlock_t new_pcb = {0, 0, 0, false};
+        fread(&burst_time, sizeof(uint32_t), 1, file);
+        fread(&priority, sizeof(uint32_t), 1, file);
+        fread(&arrival_time, sizeof(uint32_t), 1, file);
+
+        new_pcb.remaining_burst_time = burst_time;
+        new_pcb.priority = priority;
+        new_pcb.arrival = arrival_time;
+
         // Insert the PCB into the dynamic array
-        if (!dyn_array_push_back(pcb_array, &pcb)) {
+        if (!dyn_array_push_back(pcb_array, &new_pcb)) {
             // Clean up in case of error
             dyn_array_destroy(pcb_array);
             fclose(file);

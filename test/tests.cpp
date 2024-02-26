@@ -14,6 +14,7 @@ extern "C"
 #define NUM_PCB 30
 #define QUANTUM 5 // Used for Robin Round for process as the run time limit
 
+/*
 unsigned int score;
 unsigned int total;
 
@@ -33,7 +34,7 @@ class GradeEnvironment : public testing::Environment
             std::cout << "SCORE: " << score << '/' << total << std::endl;
         }
 };
-
+*/
 
 // Test case 1: Successfully load PCB burst times from a file
 TEST(load_process_control_blocks, Success) {

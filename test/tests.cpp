@@ -87,9 +87,9 @@ TEST(first_come_first_serve, MultiplePCBs) {
     ScheduleResult_t result;
 
     // Set up pcbs with different arrival times and burst times
-    ProcessControlBlock_t pcb1 = {10, 1, 0, false};
-    ProcessControlBlock_t pcb2 = {3, 2, 5, false};
-    ProcessControlBlock_t pcb3 = {7, 3, 5, false};
+    ProcessControlBlock_t pcb1 = {10, 1, 0, false, 0};
+    ProcessControlBlock_t pcb2 = {3, 2, 5, false, 0};
+    ProcessControlBlock_t pcb3 = {7, 3, 5, false, 0};
 
     //Fill the ready queue with the test pcbs
     dyn_array_push_back(ready_queue, &pcb1);
@@ -124,10 +124,10 @@ TEST(first_come_first_serve, EmptyQueue) {
     dyn_array_destroy(ready_queue);    
 }
 
-/*
-TEST(RoundRobinScheduler, SingleProcess) {
+
+TEST(round_robin, SingleProcess) {
     dyn_array_t *ready_queue = dyn_array_create(0, sizeof(ProcessControlBlock_t), NULL);
-    ProcessControlBlock_t pcb = {1, 10, 0, false}; // arrival time: 0, burst time: 10, started: false
+    ProcessControlBlock_t pcb = {10, 0, 0, false, 0}; // arrival time: 0, burst time: 10, started: false
     dyn_array_push_back(ready_queue, &pcb);
     
     ScheduleResult_t result;
@@ -137,38 +137,39 @@ TEST(RoundRobinScheduler, SingleProcess) {
     bool success = round_robin(ready_queue, &result, quantum);
     
     ASSERT_TRUE(success);
-    ASSERT_FLOAT_EQ(0.0, result.average_waiting_time); // No waiting time for a single process
-    ASSERT_FLOAT_EQ(10.0, result.average_turnaround_time); // Turnaround time equals burst time
+    ASSERT_FLOAT_EQ(0, result.average_waiting_time); // No waiting time for a single process
+    ASSERT_FLOAT_EQ(10, result.average_turnaround_time); // Turnaround time equals burst time
     ASSERT_EQ(total, result.total_run_time); // Total run time equals burst time
     
     dyn_array_destroy(ready_queue);
 }
 
-TEST(RoundRobinScheduler, MultipleProcesses) {
+TEST(round_robin, MultipleProcesses) {
     dyn_array_t *ready_queue = dyn_array_create(3, sizeof(ProcessControlBlock_t), NULL);
-    ProcessControlBlock_t pcb1 = {0, 10, 0, false};
-    ProcessControlBlock_t pcb2 = {1, 20, 0, false};
-    ProcessControlBlock_t pcb3 = {2, 30, 0, false}; // Processes with different arrival and burst times
+    ProcessControlBlock_t pcb1 = {10, 0, 0, false, 0};
+    ProcessControlBlock_t pcb2 = {20, 1, 0, false, 10};
+    ProcessControlBlock_t pcb3 = {30, 2, 0, false, 30}; // Processes with different arrival and burst times
     dyn_array_push_back(ready_queue, &pcb1);
     dyn_array_push_back(ready_queue, &pcb2);
     dyn_array_push_back(ready_queue, &pcb3);
     
     ScheduleResult_t result;
     size_t quantum = 10;
-    unsigned long int total = 50;
+    unsigned long int total = 60;
     
     bool success = round_robin(ready_queue, &result, quantum);
     
     
     ASSERT_TRUE(success);
 
-    ASSERT_FLOAT_EQ(9, result.average_waiting_time);
-    ASSERT_FLOAT_EQ(29, result.average_turnaround_time);
+    ASSERT_FLOAT_EQ(10, result.average_waiting_time);
+    ASSERT_FLOAT_EQ(36.666668, result.average_turnaround_time);
     ASSERT_EQ(total, result.total_run_time);
     
     dyn_array_destroy(ready_queue);
 }
 */
+
 
 
 TEST(shortest_job_first, EmptyQueue) {
@@ -238,10 +239,10 @@ TEST(shortest_remaining_time_first, MultiplePCBs){
     ScheduleResult_t result;
 
     // Set up pcbs with different arrival times and burst times
-    ProcessControlBlock_t pcb1 = {6, 1, 0, false}; //burst, priority, arrival, started
-    ProcessControlBlock_t pcb2 = {3, 2, 5, false};
-    ProcessControlBlock_t pcb3 = {3, 3, 3, false};
-    ProcessControlBlock_t pcb4 = {2, 3, 2, false};
+    ProcessControlBlock_t pcb1 = {6, 1, 0, false, 0}; //burst, priority, arrival, started
+    ProcessControlBlock_t pcb2 = {3, 2, 5, false, 0};
+    ProcessControlBlock_t pcb3 = {3, 3, 3, false, 0};
+    ProcessControlBlock_t pcb4 = {2, 3, 2, false, 0};
 
     //Fill the ready queue with the test pcbs
     dyn_array_push_back(ready_queue, &pcb1);

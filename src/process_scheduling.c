@@ -187,8 +187,7 @@ bool priority(dyn_array_t *ready_queue, ScheduleResult_t *result)
     return false;   
 }
 
-bool round_robin(dyn_array_t *ready_queue, ScheduleResult_t *result, size_t quantum) 
-{
+bool round_robin(dyn_array_t *ready_queue, ScheduleResult_t *result, size_t quantum) {
     if (!ready_queue || !result || quantum == 0) {
         return false; // Error handling for invalid input
     }
@@ -199,31 +198,48 @@ bool round_robin(dyn_array_t *ready_queue, ScheduleResult_t *result, size_t quan
     int completed_processes = 0;
 
     while (!dyn_array_empty(ready_queue)) {
-        for (size_t i = 0; i < dyn_array_size(ready_queue); i++) {
-            ProcessControlBlock_t *pcb = dyn_array_at(ready_queue, i);
-            if (pcb == NULL) continue;
+        ProcessControlBlock_t *pcb = (ProcessControlBlock_t*)dyn_array_front(ready_queue);
+        if (pcb == NULL) {
+            return false; // Error handling for null PCB
+        }
 
-            if (!pcb->started) {
-                pcb->started = true;
-                // Optionally track start time here for waiting/turnaround time calculations
-            }
+        // Calculate the actual time slice given to this process
+        unsigned long time_slice = (pcb->remaining_burst_time <= quantum) ? pcb->remaining_burst_time : quantum;
 
-            if (pcb->remaining_burst_time <= quantum) {
-                current_time += pcb->remaining_burst_time;
-                total_turnaround_time += current_time - pcb->arrival;
-                total_waiting_time += current_time - pcb->arrival - (pcb->remaining_burst_time);
-                pcb->remaining_burst_time = 0;
-                // Remove process from ready_queue here
-                completed_processes++;
-            } else {
-                pcb->remaining_burst_time -= quantum;
-                current_time += quantum;
-            }
+        if (!pcb->started) {
+            pcb->started = true;
+            pcb->start_time = current_time; // Record the start time of the process
+        }
+
+        // Update the current time and remaining burst time of the process
+        current_time += time_slice;
+        pcb->remaining_burst_time -= time_slice;
+
+        if (pcb->remaining_burst_time == 0) {
+            // Process completes its execution
+            unsigned long turnaround_time = current_time - pcb->arrival;
+            total_turnaround_time += turnaround_time;
+            total_waiting_time += pcb->start_time - pcb->arrival; // Waiting time is the start time minus the arrival time
+            completed_processes++;
+
+            // Remove the completed process from the queue
+            dyn_array_pop_front(ready_queue);
+        } else {
+            // If process does not complete, move it to the back of the queue
+            dyn_array_push_back(ready_queue, pcb);
+            dyn_array_pop_front(ready_queue);
         }
     }
 
-    result->average_waiting_time = (float)total_waiting_time / completed_processes;
-    result->average_turnaround_time = (float)total_turnaround_time / completed_processes;
+    // Compute the averages and total run time for the result
+    if (completed_processes > 0) {
+        result->average_waiting_time = (float)total_waiting_time / completed_processes;
+        result->average_turnaround_time = (float)total_turnaround_time / completed_processes;
+    } else {
+        // No processes were completed
+        result->average_waiting_time = 0.0f;
+        result->average_turnaround_time = 0.0f;
+    }
     result->total_run_time = current_time;
 
     return true;

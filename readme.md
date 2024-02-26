@@ -1,13 +1,15 @@
-# Assignment 2
+First Come First Serve
+Average Waiting Time: 17.500000
+Average Turnaround Time: 28.500000
+Total Run Time: 50
 
-Milestone 0: CMake and Unit Testing filled out. 
+Shortest Job First
+Average Waiting Time: 14.750000
+Average Turnaround Time: 27.250000
+Total Run Time: 50
 
-Milestone 1: PCB file loading and First Come First Served. 
+Shortest Remaining Time First
+Average Waiting Time: 10.750000
+Average Turnaround Time: 23.250000
+Total Run Time: 50
 
-Milestone 2: Shortest Job First, Shortest Remaining Time First, Round Robin, and analysis of algorithms. 
-
-Note: 
-You can manually copy the time analysis from console and paste it to this readme file, but directly output from your program is strongly recommended.     
----------------------------------------------------------------------------
-Add your scheduling algorithm analysis below this line in a readable format. 
----------------------------------------------------------------------------

@@ -56,6 +56,7 @@ bool first_come_first_serve(dyn_array_t *ready_queue, ScheduleResult_t *result)
     unsigned long time = 0;
     size_t num_PCBs = 0;
     size_t total_wait_time = 0;
+    size_t turn_around_time = 0;
 
     // While ready queue is not empty keep going
     while (!dyn_array_empty(ready_queue)){
@@ -65,25 +66,29 @@ bool first_come_first_serve(dyn_array_t *ready_queue, ScheduleResult_t *result)
             //error with dyn_array_front
             return false;
         }
-        // time when the PCB starts running minus arrival time = that PCBs wait time
-        total_wait_time += time - current_pcb->arrival;
+        
         // While there is still burst time on the first PCB run the PCB on the virtual cpu
         while (current_pcb->remaining_burst_time > 0) {
             virtual_cpu(current_pcb);
             current_pcb->started = true;
             ++time;
+            total_wait_time += dyn_array_size(ready_queue) - 1;
         }
+
+        // time when the PCB finishes running minus arrival time = that PCBs wait time
+        turn_around_time += time - current_pcb->arrival;
+
         // Pop finished PCB
         if (!dyn_array_pop_front(ready_queue)) {
             // error with pop
             return false;
         }
-        ++num_PCBs;
+        ++num_PCBs;    
     }
 
     // Calculate values for result
     result->average_waiting_time = (float)total_wait_time / num_PCBs;
-    result->average_turnaround_time = (float)time / num_PCBs;
+    result->average_turnaround_time = (float)turn_around_time / num_PCBs;
     result->total_run_time = time;
 
     //Successfully scheduled
@@ -168,7 +173,7 @@ bool shortest_job_first(dyn_array_t *ready_queue, ScheduleResult_t *result)
 
     // Calculate values for result
     result->average_waiting_time = (float)total_wait_time / num_PCBs;
-    result->average_turnaround_time = (float)time / num_PCBs;
+    result->average_turnaround_time = (float)(total_wait_time + time) / num_PCBs;
     result->total_run_time = time;
 
     //Successfully scheduled
@@ -277,21 +282,20 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
 
 bool shortest_remaining_time_first(dyn_array_t *ready_queue, ScheduleResult_t *result) 
 {
-    // Check for NULL parameters
+    /* Check for NULL parameters */
     if (ready_queue == NULL || result == NULL) {
         return false;
     }
-    // Sort ready_queue by arrival time
+    /* Sort ready_queue by arrival time */
     if (!dyn_array_sort(ready_queue, compare_by_arrival)) {
         // Error while sorting
         return false;
     }
     
-    // Store values for the schedule result stats
+    /* Store values for the schedule result stats */
     unsigned long time = 0;
     size_t num_PCBs = 0;
     size_t total_wait_time = 0;
-    size_t turnaround_time = 0;
 
     dyn_array_t *waiting_queue = dyn_array_create(0, sizeof(ProcessControlBlock_t), NULL);
 
@@ -335,8 +339,6 @@ bool shortest_remaining_time_first(dyn_array_t *ready_queue, ScheduleResult_t *r
 
         /* Remove the front of the waiting queue if its burst time is complete */
         if(cur_pcb->remaining_burst_time < 1){
-            /* Adds this PCBs turnaround time (current time - arrival time) */
-            turnaround_time += (time - cur_pcb->arrival);
             dyn_array_erase(waiting_queue, 0);
             num_PCBs++;
         }

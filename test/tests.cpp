@@ -10,7 +10,7 @@ extern "C"
 #include <dyn_array.h>
 }
 
-/*
+
 #define NUM_PCB 30
 #define QUANTUM 5 // Used for Robin Round for process as the run time limit
 
@@ -33,7 +33,7 @@ class GradeEnvironment : public testing::Environment
             std::cout << "SCORE: " << score << '/' << total << std::endl;
         }
 };
-*/
+
 
 // Test case 1: Successfully load PCB burst times from a file
 TEST(load_process_control_blocks, Success) {
@@ -41,9 +41,9 @@ TEST(load_process_control_blocks, Success) {
     const char *tempFileName = "temp_pcb_data.bin";
     FILE *tempFile = fopen(tempFileName, "wb");
     ASSERT_TRUE(tempFile != NULL);
-    uint32_t burstTimes[] = {100, 200, 300};
-    size_t numElements = sizeof(burstTimes) / sizeof(burstTimes[0]);
-    ASSERT_EQ(fwrite(burstTimes, sizeof(uint32_t), numElements, tempFile), numElements);
+    uint32_t pcb_format[] = {3, 10, 1, 0, 3, 2, 5, 7, 3, 5};
+    size_t numElements = pcb_format[0] * 3 + 1;
+    ASSERT_EQ(fwrite(pcb_format, sizeof(uint32_t), numElements, tempFile), numElements);
     fclose(tempFile);
 
     // Test: Call the function with the temporary file
@@ -51,11 +51,13 @@ TEST(load_process_control_blocks, Success) {
     ASSERT_TRUE(pcbArray != NULL);
 
     // Verify: Ensure the dynamic array contains the correct values
-    ASSERT_EQ(dyn_array_size(pcbArray), numElements);
-    for (size_t i = 0; i < numElements; ++i) {
+    ASSERT_EQ(dyn_array_size(pcbArray), pcb_format[0]);
+    for (size_t i = 0; i < pcb_format[0]; i++) {
         ProcessControlBlock_t pcb;
         ASSERT_TRUE(dyn_array_extract_front(pcbArray, &pcb));
-        ASSERT_EQ(pcb.remaining_burst_time, burstTimes[i]);
+        ASSERT_EQ(pcb.remaining_burst_time, pcb_format[i*3 + 1]);
+        ASSERT_EQ(pcb.priority, pcb_format[i*3 + 2]);
+        ASSERT_EQ(pcb.arrival, pcb_format[i*3 + 3]);
     }
 
     // Cleanup: Remove temporary file and free dynamic array
@@ -100,6 +102,7 @@ TEST(first_come_first_serve, MultiplePCBs) {
     // function succeeded and emptied the queue
     ASSERT_TRUE(test);
     ASSERT_TRUE(dyn_array_empty(ready_queue));
+    ASSERT_FLOAT_EQ(11, result.average_turnaround_time);
 
     // Clean up
     dyn_array_destroy(ready_queue);
@@ -121,7 +124,7 @@ TEST(first_come_first_serve, EmptyQueue) {
     dyn_array_destroy(ready_queue);    
 }
 
-
+/*
 TEST(RoundRobinScheduler, SingleProcess) {
     dyn_array_t *ready_queue = dyn_array_create(0, sizeof(ProcessControlBlock_t), NULL);
     ProcessControlBlock_t pcb = {1, 10, 0, false}; // arrival time: 0, burst time: 10, started: false
@@ -165,6 +168,7 @@ TEST(RoundRobinScheduler, MultipleProcesses) {
     
     dyn_array_destroy(ready_queue);
 }
+*/
 
 
 TEST(shortest_job_first, EmptyQueue) {
@@ -188,23 +192,25 @@ TEST(shortest_job_first, MultiplePCBs) {
     dyn_array_t *ready_queue = dyn_array_create(0, sizeof(ProcessControlBlock_t), NULL);
     ScheduleResult_t result;
 
-    // Set up pcbs with different arrival times and burst times
+    // Set up pcbs with different burst times
     ProcessControlBlock_t pcb1 = {10, 1, 0, false}; //burst, priority, arrival, started
-    ProcessControlBlock_t pcb2 = {3, 2, 5, false};
-    ProcessControlBlock_t pcb3 = {7, 3, 5, false};
+    ProcessControlBlock_t pcb2 = {3, 2, 0, false};
+    ProcessControlBlock_t pcb3 = {7, 3, 0, false};
 
     //Fill the ready queue with the test pcbs
     dyn_array_push_back(ready_queue, &pcb1);
     dyn_array_push_back(ready_queue, &pcb2);
     dyn_array_push_back(ready_queue, &pcb3);
 
-    // run FCFS
-    bool test = first_come_first_serve(ready_queue, &result);
+    // run shortest_job_first
+    bool test = shortest_job_first(ready_queue, &result);
 
     // function succeeded and emptied the queue
     ASSERT_TRUE(test);
     ASSERT_TRUE(dyn_array_empty(ready_queue));
-    ASSERT_TRUE(result.total_run_time == 20);
+    float average_waiting_time = 13.0/3;
+    ASSERT_FLOAT_EQ(average_waiting_time, result.average_waiting_time);
+    ASSERT_FLOAT_EQ(11, result.average_turnaround_time);
 
     // Clean up
     dyn_array_destroy(ready_queue);

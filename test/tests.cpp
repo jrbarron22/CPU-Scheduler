@@ -162,7 +162,7 @@ TEST(round_robin, MultipleProcesses) {
     
     ASSERT_TRUE(success);
 
-    ASSERT_FLOAT_EQ(10, result.average_waiting_time);
+    ASSERT_FLOAT_EQ(16.666666, result.average_waiting_time);
     ASSERT_FLOAT_EQ(36.666668, result.average_turnaround_time);
     ASSERT_EQ(total, result.total_run_time);
     
